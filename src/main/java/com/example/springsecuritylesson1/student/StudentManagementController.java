@@ -1,13 +1,19 @@
 package com.example.springsecuritylesson1.student;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 @RestController
 public class StudentManagementController {
+
+    @Autowired
+    private HttpServletRequest request;
+
 
     public static final List<Student> STUDENTS = Arrays.asList(
             new Student(1, "Mete Gencdogan"),
@@ -18,7 +24,10 @@ public class StudentManagementController {
 
     @GetMapping("management/api/v1/students")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN, ROLE_ADMINTRAINEE')")
-    public List<Student> getAllStudents() {
+    public List<Student> getAllStudents(CsrfToken token) {
+
+        System.out.println(String.format("%s : %s", token.getHeaderName(), token.getToken()));
+
         return STUDENTS;
     }
 
@@ -39,4 +48,5 @@ public class StudentManagementController {
     public void updateStudent(@PathVariable("studentId") Integer studentId, @RequestBody Student student) {
         System.out.println(String.format("%s %s", studentId, student));
     }
+
 }
