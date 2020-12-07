@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import java.util.concurrent.TimeUnit;
+
 import static com.example.springsecuritylesson1.security.ApplicationUserRole.*;
 
 @Configuration
@@ -40,7 +42,11 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginPage("/login").permitAll()
-                .defaultSuccessUrl("/courses",true);
+                .defaultSuccessUrl("/courses",true)
+                .and()
+                .rememberMe() //default (active for 2 weeks)
+                    .tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21)) //session will expire in 21 days
+                    .key("somethingverysecured");
     }
 
     @Override
