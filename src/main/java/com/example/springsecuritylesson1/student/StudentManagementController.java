@@ -11,9 +11,6 @@ import java.util.*;
 @RestController
 public class StudentManagementController {
 
-    @Autowired
-    private HttpServletRequest request;
-
 
     public static final List<Student> STUDENTS = Arrays.asList(
             new Student(1, "Mete Gencdogan"),
@@ -24,10 +21,7 @@ public class StudentManagementController {
 
     @GetMapping("management/api/v1/students")
     @PreAuthorize("hasAnyRole('ROLE_ADMIN, ROLE_ADMINTRAINEE')")
-    public List<Student> getAllStudents(CsrfToken token) {
-
-        System.out.println(String.format("%s : %s", token.getHeaderName(), token.getToken()));
-
+    public List<Student> getAllStudents() {
         return STUDENTS;
     }
 
