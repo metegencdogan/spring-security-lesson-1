@@ -1,8 +1,11 @@
 package com.example.springsecuritylesson1.security;
 
+import com.example.springsecuritylesson1.auth.ApplicationUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,10 +28,12 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
 
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationUserService applicationUserService;
 
     @Autowired
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder) {
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder, ApplicationUserService applicationUserService) {
         this.passwordEncoder = passwordEncoder;
+        this.applicationUserService = applicationUserService;
     }
 
     @Override
@@ -43,49 +48,31 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginPage("/login").permitAll()
-                .defaultSuccessUrl("/courses",true)
+                .defaultSuccessUrl("/courses", true)
                 .and()
                 .rememberMe() //default (active for 2 weeks)
-                    .tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21)) //session will expire in 21 days
-                    .key("somethingverysecured")
+                .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21)) //session will expire in 21 days
+                .key("somethingverysecured")
                 .and()
                 .logout()
-                    .logoutUrl("/logout")
-                    .logoutRequestMatcher(new AntPathRequestMatcher("/logout","GET")) //use when CSRF is disabled
-                    .clearAuthentication(true)
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID", "remember-me")
-                    .logoutSuccessUrl("/login");
+                .logoutUrl("/logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET")) //use when CSRF is disabled
+                .clearAuthentication(true)
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID", "remember-me")
+                .logoutSuccessUrl("/login");
     }
 
     @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
+    }
+
     @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails emreNazar = User.builder()
-                .username("emrenazar")
-                .password(passwordEncoder.encode("password"))
-//                .roles(STUDENT.name())
-                .authorities(STUDENT.getGrantedAuthority())
-                .build();
-
-        UserDetails meteGencdogan = User.builder()
-                .username("metegencdogan")
-                .password(passwordEncoder.encode("password123"))
-//                .roles(ADMIN.name())
-                .authorities(ADMIN.getGrantedAuthority())
-                .build();
-
-        UserDetails idilDikbas = User.builder()
-                .username("idildikbas")
-                .password(passwordEncoder.encode("password123"))
-//                .roles(ADMINTRAINEE.name())
-                .authorities(ADMINTRAINEE.getGrantedAuthority())
-                .build();
-
-        return new InMemoryUserDetailsManager(
-                emreNazar,
-                meteGencdogan,
-                idilDikbas
-        );
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(applicationUserService);
+        return provider;
     }
 }
